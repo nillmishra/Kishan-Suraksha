@@ -1,56 +1,66 @@
 # backend/app.py
+import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import tensorflow as tf
 import numpy as np
-import os
 from werkzeug.utils import secure_filename
-
-app = Flask(__name__)
-
-# CORS via env var: ALLOW_ORIGINS="https://your-frontend.vercel.app,https://your-node.onrender.com"
-allow = os.environ.get("ALLOW_ORIGINS", "*")  # comma-separated or "*"
-if allow == "*":
-    CORS(app, resources={r"*": {"origins": "*"}})
-else:
-    origins = [o.strip() for o in allow.split(",") if o.strip()]
-    CORS(app, resources={r"*": {"origins": origins}})
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOADS = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOADS, exist_ok=True)
 
-ALLOWED = {"png", "jpg", "jpeg"}
+ALLOWED_EXT = {"png", "jpg", "jpeg"}
+IMAGE_SIZE = int(os.environ.get("IMAGE_SIZE", "150"))
+
+app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  # 8 MB
+
+# CORS via env var: ALLOW_ORIGINS="https://your-frontend.vercel.app,https://your-node.onrender.com"
+allow = os.environ.get("ALLOW_ORIGINS", "*")  # comma-separated or "*"
+if allow == "*":
+    CORS(app, resources={r"/*": {"origins": "*"}})
+else:
+    origins = [o.strip() for o in allow.split(",") if o.strip()]
+    CORS(app, resources={r"/*": {"origins": origins}})
 
 # Model file is in the backend folder (same directory as this file)
 MODEL_PATH = os.path.join(BASE_DIR, "advanced_rice_leaf_disease_model.h5")
-
 CLASS_NAMES = ["Bacterial Blight", "Blast", "Brown Spot", "Tungro"]
 
 # Load model once at startup
 model = tf.keras.models.load_model(MODEL_PATH)
 
-def allowed_file(name: str) -> bool:
-    return "." in name and name.rsplit(".", 1)[1].lower() in ALLOWED
+def allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
 def predict_image(path: str):
-    img = tf.keras.preprocessing.image.load_img(path, target_size=(150, 150))
-    arr = tf.keras.preprocessing.image.img_to_array(img) / 255.0
+    img = tf.keras.utils.load_img(path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
+    arr = tf.keras.utils.img_to_array(img) / 255.0
     arr = np.expand_dims(arr, axis=0)
-    probs = model.predict(arr, verbose=0)[0]  # softmax
+    probs = model.predict(arr, verbose=0)[0]  # softmax probs
     idx = int(np.argmax(probs))
     return {
-        "result": CLASS_NAMES[idx] if idx < len(CLASS_NAMES) else "Unknown",
+        "result": CLASS_NAMES[idx] if idx < len(CLASS_NAMES) else f"class_{idx}",
+        "index": idx,
         "confidence": float(probs[idx]),
         "probs": [float(x) for x in probs.tolist()],
     }
 
-@app.get("/health")
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({"service": "ks-ml", "ok": True})
+
+@app.route("/health", methods=["GET"])
 def health():
     return jsonify({"ok": True})
 
-@app.post("/predict")
+@app.route("/predict", methods=["POST", "OPTIONS"])
 def predict():
+    if request.method == "OPTIONS":
+        # allow CORS preflight
+        return ("", 204)
+
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded (field name: file)"}), 400
 
@@ -74,15 +84,17 @@ def predict():
 
     try:
         out = predict_image(path)
-        image_url = request.host_url.rstrip("/") + f"/uploads/{name}"
+        host = request.url_root.rstrip("/")
+        image_url = f"{host}/uploads/{name}"
         return jsonify({**out, "image_url": image_url})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.get("/uploads/<path:fname>")
+@app.route("/uploads/<path:fname>", methods=["GET"])
 def serve_upload(fname):
     return send_from_directory(UPLOADS, fname)
 
 if __name__ == "__main__":
     # Local development run
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    port = int(os.environ.get("PORT", "5001"))
+    app.run(host="0.0.0.0", port=port, debug=True)
