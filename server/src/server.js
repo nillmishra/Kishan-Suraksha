@@ -110,9 +110,10 @@ app.post('/api/ml/predict', upload.single('file'), async (req, res) => {
 });
 
 // Seed admin on boot (Option A)
+// Seed admin on boot (Option A) — FIXED to use passwordHash and patch existing admin
 async function ensureAdmin() {
   try {
-    const email = process.env.ADMIN_EMAIL;
+    const email = String(process.env.ADMIN_EMAIL || '').toLowerCase();
     const password = process.env.ADMIN_PASSWORD;
     const name = process.env.ADMIN_NAME || 'Admin';
     const collection = process.env.USERS_COLLECTION || 'users';
@@ -124,15 +125,27 @@ async function ensureAdmin() {
 
     const col = mongoose.connection.collection(collection);
     const existing = await col.findOne({ email });
+
     if (existing) {
-      console.log('Admin user already exists');
+      // Patch existing admin if it has no passwordHash yet
+      if (!existing.passwordHash) {
+        const hash = await bcrypt.hash(password, 10);
+        await col.updateOne(
+          { _id: existing._id },
+          { $set: { passwordHash: hash, isAdmin: true, role: 'admin', name }, $unset: { password: '' } }
+        );
+        console.log('Admin passwordHash set for:', email);
+      } else {
+        console.log('Admin user already exists with passwordHash');
+      }
       return;
     }
 
+    // Create admin if not exists (store passwordHash)
     const hash = await bcrypt.hash(password, 10);
     await col.insertOne({
       email,
-      password: hash,
+      passwordHash: hash,
       role: 'admin',
       isAdmin: true,
       name,
@@ -148,7 +161,6 @@ async function ensureAdmin() {
     }
   }
 }
-
 // Start server after DB connects
 connectMongo()
   .then(async () => {
