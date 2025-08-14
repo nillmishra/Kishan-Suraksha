@@ -22,7 +22,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Per-tab auth sync only (no cross-tab storage listener)
   useEffect(() => {
     const sync = () => {
       try { setUser(JSON.parse(localStorage.getItem('user') || 'null')); } catch { setUser(null); }
@@ -32,7 +31,6 @@ export default function Navbar() {
     return () => window.removeEventListener('auth:changed', sync);
   }, []);
 
-  // Hide Navbar on admin, login, and signup pages
   const pathname = location.pathname;
   if (pathname.startsWith('/admin') || pathname === '/login' || pathname === '/signup') {
     return null;
@@ -53,12 +51,12 @@ export default function Navbar() {
     <nav className="fixed top-0 inset-x-0 z-50 bg-white shadow">
       <div className="w-full px-4">
         <div className="h-20 flex items-center justify-between">
-          {/* Logo */}
+
           <Link to="/" className="flex items-center">
             <img src={logo} alt="Kishan Suraksha Logo" className="w-44 pt-3" />
           </Link>
 
-          {/* Desktop Nav */}
+
           <div className="hidden md:flex items-center gap-10">
             {navItems.map((item) => (
               <NavLink
@@ -74,7 +72,6 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-4">
             <Link to="/cart" className="relative inline-flex items-center text-gray-900 hover:text-green-700" aria-label="Cart">
               <FaShoppingCart className="w-5 h-5" />
@@ -98,7 +95,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Right: Cart + Login/Hi + Hamburger */}
           <div className="flex items-center gap-3 md:hidden">
             <Link
               to="/cart"
@@ -132,7 +128,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Dropdown: only nav links + Sign Up/Logout */}
         {open && (
           <div className="md:hidden pb-4 space-y-3">
             {navItems.map((item) => (
