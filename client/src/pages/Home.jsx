@@ -8,7 +8,7 @@ export default function Home() {
     <div id="home" className="bg-gradient-to-b from-green-50 via-white to-white">
       <Hero />
       <Features />
-      <ProductsSection gateAdd /> {/* Gate add-to-cart on Home only */}
+      <ProductsSection gateAdd /> 
       <Testimonials />
     </div>
   );

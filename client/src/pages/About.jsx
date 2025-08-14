@@ -43,7 +43,6 @@ export default function About() {
             </p>
           </div>
 
-          {/* Intro card */}
           <div className="max-w-6xl mx-auto mt-10 card p-6 md:p-10">
             <h2 className="text-2xl md:text-3xl font-extrabold">Who we are</h2>
             <p className="mt-4 text-gray-700">
@@ -53,7 +52,6 @@ export default function About() {
               modern agriculture.
             </p>
 
-            {/* Mission + Why (2 columns) */}
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="card-muted p-6">
                 <h3 className="text-xl font-semibold text-green-700">Our Mission</h3>
@@ -74,7 +72,6 @@ export default function About() {
               </div>
             </div>
 
-            {/* Quick stats */}
             <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div className="card p-4">
                 <div className="text-2xl font-extrabold text-green-700">10K+</div>
@@ -94,7 +91,6 @@ export default function About() {
               </div>
             </div>
 
-            {/* CTA */}
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button to="/upload">Try CropGuard AI</Button>
               <Button to="/products" variant="outline">Browse Products</Button>
@@ -103,7 +99,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* Features */}
       <section className="bg-white py-14 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold">Our Features</h2>
@@ -133,7 +128,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* Testimonials */}
       <section id="testimonials" className="bg-gradient-to-b from-white to-green-50 py-14 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold">What Our Farmers Say</h2>
@@ -161,7 +155,6 @@ export default function About() {
             />
           </div>
 
-          {/* Bottom CTA */}
           <div className="mt-10">
             <Button to="/upload">Start a Free Scan</Button>
           </div>

@@ -72,9 +72,7 @@ export default function Contact() {
           <p className="text-gray-700 mt-2">We typically reply within 24 hours.</p>
         </div>
 
-        {/* Main content: Info (left) + Form (right) */}
         <div className="mt-10 grid grid-cols-1 md:grid-cols-5 gap-8 items-stretch">
-          {/* Info card (left) */}
           <div className="md:col-span-2 card p-6 md:p-8 h-full flex flex-col">
             <h3 className="text-xl font-semibold">How can we help?</h3>
             <p className="text-gray-700 mt-2">
@@ -123,7 +121,6 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* Push socials to the bottom so both cards align visually */}
             <div className="mt-auto pt-6">
               <div className="text-sm font-semibold">Follow Us</div>
               <div className="mt-2 flex items-center gap-3 text-gray-600">
@@ -136,7 +133,7 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Form card (right) */}
+
           <div className="md:col-span-3 card p-6 md:p-8 h-full flex flex-col">
             <h3 className="text-xl font-semibold text-center md:text-left">Send us a message</h3>
 

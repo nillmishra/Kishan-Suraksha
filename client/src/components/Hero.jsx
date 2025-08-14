@@ -18,7 +18,6 @@ export default function Hero() {
     <header className="bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-10">
-          {/* Left: Copy */}
           <div className="md:min-w-[300px]">
             <span className="inline-block px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
               New • AI-powered
@@ -35,7 +34,6 @@ export default function Hero() {
               <Button to="/products" variant="outline">Browse Products</Button>
             </div>
 
-            {/* Quick highlights */}
             <ul className="mt-6 text-sm text-gray-600 grid grid-cols-2 gap-2 max-w-sm">
               <li className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
@@ -56,7 +54,7 @@ export default function Hero() {
             </ul>
           </div>
 
-          {/* Right: Image */}
+    
           <div className="relative w-full md:w-auto">
             <div className="absolute -top-6 -left-6 w-40 h-40 bg-green-200/40 rounded-full blur-3xl" />
             <div className="w-full rounded-2xl p-4 flex items-center justify-center">

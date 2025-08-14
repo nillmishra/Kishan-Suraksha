@@ -1,9 +1,7 @@
-// client/src/context/CartContext.jsx
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-const CartContext = createContext(null); // not exported
+const CartContext = createContext(null); 
 
-// Key format: cart:<userId> or cart:guest
 const STORAGE_KEY = (userId) => `cart:${userId || 'guest'}`;
 const getUserFromStorage = () => {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
@@ -25,23 +23,19 @@ export function CartProvider({ children }) {
     }
   };
 
-  // Initial load
   useEffect(() => {
     loadCart(user?.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist on change
   useEffect(() => {
     localStorage.setItem(currentKeyRef.current, JSON.stringify(items));
   }, [items]);
 
-  // React to login/logout (this or other tabs)
   useEffect(() => {
     const syncAuth = () => {
       const u = getUserFromStorage();
 
-      // Merge guest cart into user's cart on login
       const GUEST_KEY = STORAGE_KEY(undefined);
       if (u?.id) {
         const userKey = STORAGE_KEY(u.id);

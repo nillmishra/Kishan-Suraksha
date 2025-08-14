@@ -123,7 +123,7 @@ export default function AdminDashboard() {
         <Button variant="outline" onClick={() => navigate('/admin/orders')}>Manage Orders</Button>
       </div>
 
-      {/* KPI cards */}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard label="Total Orders" value={stats.totalOrders} />
         <StatCard label="Today’s Orders" value={stats.todayOrders} />
@@ -133,7 +133,6 @@ export default function AdminDashboard() {
         <StatCard label="Low Stock" value={stats.lowStockCount} />
       </div>
 
-      {/* Status breakdown + Low stock */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border rounded-2xl p-6 shadow">
           <h3 className="font-semibold mb-3">Orders by Status</h3>

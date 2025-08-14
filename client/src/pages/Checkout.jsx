@@ -25,7 +25,7 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  const [shippingMode, setShippingMode] = useState('standard'); // 'standard' | 'express'
+  const [shippingMode, setShippingMode] = useState('standard'); 
   const [paymentMethod, setPaymentMethod] = useState('cod'); // 'cod' | 'online'
 
   const [promoCode, setPromoCode] = useState('');
@@ -281,9 +281,7 @@ export default function Checkout() {
           <p className="text-gray-700 mt-2">Choose address, delivery, and payment.</p>
         </div>
 
-        {/* Main content: 60/40 layout */}
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
-          {/* Left (60%) */}
           <div className="lg:col-span-3 card p-6 flex flex-col">
             <h2 className="text-xl font-semibold">Saved Addresses</h2>
 
@@ -407,11 +405,9 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Right (40%) */}
           <aside className="lg:col-span-2 card p-6 h-full flex flex-col">
             <h2 className="text-xl font-semibold">Order Summary</h2>
 
-            {/* Promo apply/remove */}
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700">Promo code</label>
               <div className="mt-1 flex gap-2">

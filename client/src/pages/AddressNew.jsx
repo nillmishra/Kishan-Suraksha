@@ -66,7 +66,6 @@ const save = async (e) => {
 
     navigate('/checkout', { replace: true });
   } catch (e) {
-    // If you see <!DOCTYPE ... here, your request hit the frontend (wrong API URL) or 404 HTML
     setStatus(e.message || 'Failed to save address');
   }
 };
