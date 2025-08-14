@@ -6,7 +6,11 @@ import { User } from './models/User.js';
 const router = Router();
 
 function createToken(user, secret) {
-  return jwt.sign({ id: user._id, email: user.email, name: user.name, isAdmin: !!user.isAdmin }, secret, { expiresIn: '8h' });
+  return jwt.sign(
+    { id: user._id, email: user.email, name: user.name, isAdmin: !!user.isAdmin },
+    secret,
+    { expiresIn: '8h' }
+  );
 }
 
 export function requireAuth(req, res, next) {
@@ -32,12 +36,13 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
     if (!name || !email || !password) return res.status(400).json({ error: 'All fields are required.' });
-    const exists = await User.findOne({ email: email.toLowerCase() });
+    const exists = await User.findOne({ email: String(email).toLowerCase() });
     if (exists) return res.status(409).json({ error: 'Email already registered.' });
     const hash = await bcrypt.hash(password, 10);
-    await User.create({ name, email: email.toLowerCase(), passwordHash: hash });
+    await User.create({ name, email: String(email).toLowerCase(), passwordHash: hash });
     return res.status(201).json({ message: 'Registered successfully.' });
-  } catch {
+  } catch (e) {
+    console.error('Register error:', e?.message || e);
     return res.status(500).json({ error: 'Server error' });
   }
 });
@@ -45,20 +50,32 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body || {};
-    const user = await User.findOne({ email: String(email).toLowerCase() });
+    const user = await User.findOne({ email: String(email).toLowerCase() }).select('+passwordHash +password +isAdmin +name +email');
     if (!user) return res.status(401).json({ error: 'Invalid email or password.' });
-    const ok = await bcrypt.compare(password, user.passwordHash);
+
+    // Accept either passwordHash (preferred) or password (fallback from earlier seed)
+    const hash = user.passwordHash || user.password;
+    if (!hash) return res.status(500).json({ error: 'Password not set for user.' });
+
+    const ok = await bcrypt.compare(password, hash);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
+
     const token = createToken(user, process.env.JWT_SECRET || 'dev');
-    return res.json({ access_token: token, user: { id: user._id, name: user.name, email: user.email, isAdmin: !!user.isAdmin } });
-  } catch {
+    return res.json({
+      access_token: token,
+      user: { id: user._id, name: user.name, email: user.email, isAdmin: !!user.isAdmin },
+    });
+  } catch (e) {
+    console.error('Login error:', e?.message || e);
     return res.status(500).json({ error: 'Server error' });
   }
 });
 
 router.get('/me', requireAuth, async (req, res) => {
   const user = await User.findById(req.user.id).select('name email isAdmin');
-  return res.json({ user: user ? { id: user._id, name: user.name, email: user.email, isAdmin: !!user.isAdmin } : req.user });
+  return res.json({
+    user: user ? { id: user._id, name: user.name, email: user.email, isAdmin: !!user.isAdmin } : req.user,
+  });
 });
 
 export { router as authRouter };
