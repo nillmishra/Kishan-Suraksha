@@ -53,7 +53,6 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email: String(email).toLowerCase() }).select('+passwordHash +password +isAdmin +name +email');
     if (!user) return res.status(401).json({ error: 'Invalid email or password.' });
 
-    // Accept either passwordHash (preferred) or password (fallback from earlier seed)
     const hash = user.passwordHash || user.password;
     if (!hash) return res.status(500).json({ error: 'Password not set for user.' });
 

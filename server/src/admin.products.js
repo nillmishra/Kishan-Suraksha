@@ -22,7 +22,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Admin: list products
 router.get('/products', requireAdmin, async (req, res) => {
   try {
     const list = await Product.find({}).sort({ createdAt: -1 });
@@ -32,7 +31,7 @@ router.get('/products', requireAdmin, async (req, res) => {
   }
 });
 
-// Admin: create product
+
 router.post('/products', requireAdmin, async (req, res) => {
   try {
     const p = req.body || {};
@@ -55,7 +54,6 @@ router.post('/products', requireAdmin, async (req, res) => {
   }
 });
 
-// Admin: upload image
 router.post('/products/upload-image', requireAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image file uploaded (field name: image)' });
@@ -66,7 +64,7 @@ router.post('/products/upload-image', requireAdmin, upload.single('image'), asyn
   }
 });
 
-// Admin: update product
+
 router.put('/products/:id', requireAdmin, async (req, res) => {
   try {
     const updated = await Product.findByIdAndUpdate(req.params.id, { $set: req.body || {} }, { new: true });
@@ -77,7 +75,6 @@ router.put('/products/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// Admin: delete (soft by default)
 router.delete('/products/:id', requireAdmin, async (req, res) => {
   try {
     const hard = String(req.query.hard || '').toLowerCase() === 'true';

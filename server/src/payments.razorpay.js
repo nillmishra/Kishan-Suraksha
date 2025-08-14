@@ -55,8 +55,6 @@ router.post('/verify', requireAuth, async (req, res) => {
     const verified = hmac === razorpay_signature;
     if (!verified) return res.status(400).json({ verified: false, error: 'Invalid signature' });
 
-    // Optional: save payment info in DB here (map order_id -> payment_id)
-    // For now, just return OK.
     return res.json({ verified: true });
   } catch (e) {
     console.error('Razorpay verify error:', e);

@@ -3,7 +3,6 @@ import { Contact } from './models/Contact.js';
 
 const router = Router();
 
-// Simple per-IP rate limit: 1 request / 30s
 const hits = new Map();
 function limited(ip, windowMs = 30000) {
   const now = Date.now();

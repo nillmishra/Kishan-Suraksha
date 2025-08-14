@@ -1,4 +1,3 @@
-// server/src/orders.js
 import { Router } from 'express';
 import { nanoid } from 'nanoid';
 import { Order } from './models/Order.js';
@@ -6,7 +5,6 @@ import { requireAuth } from './auth.js';
 
 const router = Router();
 
-// Create order (unchanged)
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { items, pricing, address, shippingMode = 'standard', paymentMethod = 'COD', promoCode } = req.body || {};
@@ -55,12 +53,11 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// NEW: List all orders for the current user
 router.get('/', requireAuth, async (req, res) => {
   try {
     const { status, limit } = req.query;
     const q = { user: req.user.id };
-    if (status) q.status = status; // optional filter
+    if (status) q.status = status; 
 
     const lim = Math.min(Number(limit) || 200, 200);
     const list = await Order.find(q).sort({ createdAt: -1 }).limit(lim);
@@ -70,7 +67,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-// Get a specific order by orderId for the current user (unchanged)
+
 router.get('/:orderId', requireAuth, async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId, user: req.user.id });

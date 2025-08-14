@@ -24,27 +24,25 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-// Allow multiple origins via comma-separated env
 const ORIGINS = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173,http://127.0.0.1:5173')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
 
-// ML service URL (Render ML service)
 const MODEL_API_URL = process.env.MODEL_API_URL || process.env.FLASK_URL || '';
 
-app.set('trust proxy', 1); // needed for secure cookies behind Render proxy
+app.set('trust proxy', 1); 
 
 app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// CORS (supports credentials and multiple allowed origins)
+// CORS setup
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // non-browser or same-origin
+      if (!origin) return cb(null, true); 
       if (ORIGINS.includes(origin)) return cb(null, true);
       return cb(new Error(`CORS blocked for origin ${origin}`));
     },
@@ -61,16 +59,15 @@ app.use('/orders', ordersRouter);
 app.use('/admin', adminProductsRouter);
 app.use('/admin', adminOrdersRouter);
 
-// Serve uploaded files
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
-// Health routes
+
 app.get('/', (_req, res) => res.json({ ok: true, service: 'ks-server', mlConfigured: Boolean(MODEL_API_URL) }));
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-// Public products for UI (active only)
 app.get('/products', async (_req, res) => {
   try {
     const list = await Product.find({ isActive: true }).sort({ createdAt: -1 }).limit(200);
@@ -81,9 +78,6 @@ app.get('/products', async (_req, res) => {
   }
 });
 
-/* =========================
-   Predict proxy (alias both routes)
-   ========================= */
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 async function mlProxyHandler(req, res) {
@@ -112,13 +106,9 @@ async function mlProxyHandler(req, res) {
   }
 }
 
-// Register both paths so old/new frontends work
 app.post('/api/ml/predict', upload.single('file'), mlProxyHandler);
 app.post('/predict', upload.single('file'), mlProxyHandler);
 
-/* =========================
-   Seed admin on boot (Option A) — DO NOT CHANGE
-   ========================= */
 async function ensureAdmin() {
   try {
     const email = String(process.env.ADMIN_EMAIL || '').toLowerCase();
@@ -135,7 +125,6 @@ async function ensureAdmin() {
     const existing = await col.findOne({ email });
 
     if (existing) {
-      // Patch existing admin if it has no passwordHash yet
       if (!existing.passwordHash) {
         const hash = await bcrypt.hash(password, 10);
         await col.updateOne(
@@ -149,7 +138,6 @@ async function ensureAdmin() {
       return;
     }
 
-    // Create admin if not exists (store passwordHash)
     const hash = await bcrypt.hash(password, 10);
     await col.insertOne({
       email,
@@ -170,7 +158,6 @@ async function ensureAdmin() {
   }
 }
 
-// Start server after DB connects
 connectMongo()
   .then(async () => {
     if (process.env.SEED_ON_BOOT === 'true') {

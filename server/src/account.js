@@ -4,9 +4,6 @@ import { requireAuth } from './auth.js';
 
 const router = Router();
 
-/* -------------------- Addresses CRUD -------------------- */
-
-// Get all addresses
 router.get('/addresses', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('addresses');
@@ -36,10 +33,9 @@ router.post('/addresses', requireAuth, async (req, res) => {
       state: String(a.state).trim(),
       pincode: String(a.pincode).trim(),
       country: String(a.country || 'India').trim(),
-      isDefault: a.isDefault === true || isFirst, // first address becomes default
+      isDefault: a.isDefault === true || isFirst, 
     };
 
-    // If set default true, unset others
     if (newAddress.isDefault) {
       user.addresses.forEach(ad => ad.isDefault = false);
     }
@@ -51,7 +47,6 @@ router.post('/addresses', requireAuth, async (req, res) => {
   }
 });
 
-// Update address
 router.put('/addresses/:id', requireAuth, async (req, res) => {
   try {
     const id = req.params.id;
@@ -60,7 +55,6 @@ router.put('/addresses/:id', requireAuth, async (req, res) => {
     const addr = user.addresses.id(id);
     if (!addr) return res.status(404).json({ error: 'Address not found' });
 
-    // Update fields
     ['label','fullName','phone','line1','line2','city','state','pincode','country'].forEach(k => {
       if (a[k] !== undefined) addr[k] = String(a[k]).trim();
     });
@@ -76,7 +70,6 @@ router.put('/addresses/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Delete address
 router.delete('/addresses/:id', requireAuth, async (req, res) => {
   try {
     const id = req.params.id;
@@ -87,7 +80,6 @@ router.delete('/addresses/:id', requireAuth, async (req, res) => {
     const wasDefault = addr.isDefault;
     addr.remove();
 
-    // If deleted default, set first address as default if exists
     if (wasDefault && user.addresses.length > 0) user.addresses[0].isDefault = true;
 
     await user.save();
@@ -97,7 +89,6 @@ router.delete('/addresses/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Set default address
 router.patch('/addresses/:id/default', requireAuth, async (req, res) => {
   try {
     const id = req.params.id;
@@ -114,7 +105,6 @@ router.patch('/addresses/:id/default', requireAuth, async (req, res) => {
   }
 });
 
-/* --------- Keep last-used shipping (compatibility) --------- */
 router.get('/shipping', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('shipping');
