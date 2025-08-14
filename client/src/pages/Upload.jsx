@@ -1,10 +1,10 @@
+// client/src/pages/Upload.jsx
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import { FiUploadCloud, FiCpu, FiActivity, FiImage } from 'react-icons/fi';
 import { toImg } from '../utils/toImg';
 
-// Local sample images (place files under: client/src/assets/samples/)
 import leaf1 from '../assets/tamatoleaf.png';
 import leaf2 from '../assets/riceleaf.png';
 import leaf3 from '../assets/grapesleaf.png';
@@ -68,7 +68,6 @@ export default function Upload() {
 
   const handleChooseFile = () => inputRef.current?.click();
 
-  // Local-only samples (no external links)
   const SAMPLE_IMAGES = [
     { label: 'Tomato Leaf', src: leaf1 },
     { label: 'Rice Leaf', src: leaf2 },
@@ -79,7 +78,6 @@ export default function Upload() {
     setStatus('');
     setProgress(0);
     try {
-      // Imported image resolves to a local URL served by Vite
       const res = await fetch(srcUrl);
       const blob = await res.blob();
       const ext = blob.type?.includes('png') ? 'png' : 'jpg';
@@ -127,7 +125,7 @@ export default function Upload() {
     const formData = new FormData();
     formData.append('file', file);
     const API = import.meta.env.VITE_API_URL || '';
-    const url = `${API}/predict`;
+    const url = `${API}/api/ml/predict`; // CHANGED from /predict to /api/ml/predict
 
     try {
       setUploading(true);
@@ -209,7 +207,6 @@ export default function Upload() {
       setReviewMsg('Failed to save feedback locally. Please try again.');
     }
   };
-
   return (
     <section className="bg-gradient-to-b from-green-50 via-white to-white">
       {/* Hero */}

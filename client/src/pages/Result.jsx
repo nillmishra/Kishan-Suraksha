@@ -1,3 +1,4 @@
+// client/src/pages/Result.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import Button from "../components/ui/Button";
@@ -7,41 +8,31 @@ export default function Result() {
   const [search] = useSearchParams();
   const [copied, setCopied] = useState(false);
 
-  // Data from state or query params
   const result = location.state?.result ?? search.get("result") ?? "Unknown";
   const confidenceRaw =
     location.state?.confidence ?? Number(search.get("confidence") || NaN);
   let imageUrl = location.state?.imageUrl ?? search.get("image") ?? "";
   const probsRaw = location.state?.probs || null;
 
-  // Prefix server-hosted images like /uploads/...
   const API = import.meta.env.VITE_API_URL || "";
   if (imageUrl && imageUrl.startsWith("/") && API)
     imageUrl = `${API}${imageUrl}`;
 
   const hasData = Boolean(result) || Boolean(imageUrl);
 
-  // Confidence (0–100)
   const pct = Number.isFinite(confidenceRaw)
     ? Math.max(0, Math.min(100, Math.round(Number(confidenceRaw) * 100)))
     : null;
 
-  // Normalize probabilities if provided (supports object map or array of {label, prob})
   const topProbs = useMemo(() => {
     if (!probsRaw) return [];
-    // Object map: { label: prob }
     if (typeof probsRaw === "object" && !Array.isArray(probsRaw)) {
       return Object.entries(probsRaw)
         .map(([label, prob]) => ({ label, prob: Number(prob) || 0 }))
         .sort((a, b) => b.prob - a.prob)
         .slice(0, 5);
     }
-    // Array of objects: [{ label, prob }]
-    if (
-      Array.isArray(probsRaw) &&
-      probsRaw.length &&
-      typeof probsRaw[0] === "object"
-    ) {
+    if (Array.isArray(probsRaw) && probsRaw.length && typeof probsRaw[0] === "object") {
       return probsRaw
         .map((it) => ({
           label: it.label || it.class || "Class",
@@ -53,13 +44,10 @@ export default function Result() {
     return [];
   }, [probsRaw]);
 
-  // Set page title
   useEffect(() => {
     const prev = document.title;
     document.title = `Result • ${result} | CropGuard AI`;
-    return () => {
-      document.title = prev;
-    };
+    return () => { document.title = prev; };
   }, [result]);
 
   if (!hasData) {
@@ -80,8 +68,7 @@ export default function Result() {
     const base = `${window.location.origin}/result`;
     const p = new URLSearchParams();
     if (result) p.set("result", result);
-    if (Number.isFinite(confidenceRaw))
-      p.set("confidence", String(confidenceRaw));
+    if (Number.isFinite(confidenceRaw)) p.set("confidence", String(confidenceRaw));
     if (imageUrl) p.set("image", imageUrl);
     return `${base}?${p.toString()}`;
   })();
@@ -92,7 +79,6 @@ export default function Result() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // fallback
       alert("Copy failed. Long-press the link to copy.");
     }
   };
