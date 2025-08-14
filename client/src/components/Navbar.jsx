@@ -53,10 +53,12 @@ export default function Navbar() {
     <nav className="fixed top-0 inset-x-0 z-50 bg-white shadow">
       <div className="w-full px-4">
         <div className="h-20 flex items-center justify-between">
+          {/* Logo */}
           <Link to="/" className="flex items-center">
             <img src={logo} alt="Kishan Suraksha Logo" className="w-44 pt-3" />
           </Link>
 
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-10">
             {navItems.map((item) => (
               <NavLink
@@ -72,8 +74,9 @@ export default function Navbar() {
             ))}
           </div>
 
+          {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/cart" className="relative inline-flex items-center text-gray-900 hover:text-green-700">
+            <Link to="/cart" className="relative inline-flex items-center text-gray-900 hover:text-green-700" aria-label="Cart">
               <FaShoppingCart className="w-5 h-5" />
               {count > 0 && (
                 <span className="ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs bg-green-600 text-white">
@@ -95,17 +98,41 @@ export default function Navbar() {
             )}
           </div>
 
-          <button
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-md hover:bg-gray-100"
-            onClick={() => setOpen((o) => !o)}
-            aria-label="Toggle Menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d={open ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
-            </svg>
-          </button>
+          {/* Mobile Right: Cart + Login/Hi + Hamburger */}
+          <div className="flex items-center gap-3 md:hidden">
+            <Link
+              to="/cart"
+              className="relative inline-flex items-center text-gray-900 hover:text-green-700"
+              aria-label="Cart"
+            >
+              <FaShoppingCart className="w-6 h-6" />
+              {count > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs bg-green-600 text-white">
+                  {count}
+                </span>
+              )}
+            </Link>
+
+            {user ? (
+              <span className="font-medium text-gray-900 max-w-[8rem] truncate">Hi, {firstName}</span>
+            ) : (
+              <Button to="/login" size="sm">Log In</Button>
+            )}
+
+            <button
+              className="inline-flex items-center justify-center p-2 rounded-md hover:bg-gray-100"
+              onClick={() => setOpen((o) => !o)}
+              aria-label="Toggle Menu"
+              aria-expanded={open}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d={open ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
+              </svg>
+            </button>
+          </div>
         </div>
 
+        {/* Mobile Dropdown: only nav links + Sign Up/Logout */}
         {open && (
           <div className="md:hidden pb-4 space-y-3">
             {navItems.map((item) => (
@@ -122,21 +149,11 @@ export default function Navbar() {
               </NavLink>
             ))}
 
-            <div className="pt-2 flex items-center gap-3">
-              <Link to="/cart" onClick={() => setOpen(false)} className="font-medium text-gray-900 hover:text-green-700">
-                Cart {count > 0 ? `(${count})` : ''}
-              </Link>
-
+            <div className="pt-2">
               {user ? (
-                <>
-                  <span className="font-medium text-gray-900">Hi, {firstName}</span>
-                  <Button onClick={handleLogout} size="sm" variant="outline">Logout</Button>
-                </>
+                <Button onClick={handleLogout} size="sm" variant="outline">Logout</Button>
               ) : (
-                <>
-                  <Link to="/login" onClick={() => setOpen(false)} className="font-medium text-gray-900 hover:text-green-700">Log In</Link>
-                  <Button to="/signup" size="sm">Sign Up</Button>
-                </>
+                <Button to="/signup" size="sm">Sign Up</Button>
               )}
             </div>
           </div>
