@@ -10,7 +10,6 @@ import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-
 import contactRouter from './contact.js';
 import { authRouter } from './auth.js';
 import { connectMongo } from './db.js';
@@ -82,11 +81,15 @@ app.get('/products', async (_req, res) => {
   }
 });
 
-// Predict proxy
+/* =========================
+   Predict proxy (alias both routes)
+   ========================= */
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
-app.post('/api/ml/predict', upload.single('file'), async (req, res) => {
+
+async function mlProxyHandler(req, res) {
   try {
-    if (!MODEL_API_URL) return res.status(501).json({ error: 'ML service not configured. Set MODEL_API_URL or FLASK_URL' });
+    const base = MODEL_API_URL;
+    if (!base) return res.status(501).json({ error: 'ML service not configured. Set MODEL_API_URL or FLASK_URL' });
     if (!req.file) return res.status(400).json({ error: 'No file uploaded (field name: file)' });
 
     const form = new FormData();
@@ -96,7 +99,7 @@ app.post('/api/ml/predict', upload.single('file'), async (req, res) => {
       knownLength: req.file.size,
     });
 
-    const r = await axios.post(`${MODEL_API_URL}/predict`, form, {
+    const r = await axios.post(`${base}/predict`, form, {
       headers: form.getHeaders(),
       timeout: 120000, // allow cold start
     });
@@ -107,10 +110,15 @@ app.post('/api/ml/predict', upload.single('file'), async (req, res) => {
     const status = err?.response?.status || 500;
     res.status(status).json({ error: 'ML proxy failed' });
   }
-});
+}
 
-// Seed admin on boot (Option A)
-// Seed admin on boot (Option A) — FIXED to use passwordHash and patch existing admin
+// Register both paths so old/new frontends work
+app.post('/api/ml/predict', upload.single('file'), mlProxyHandler);
+app.post('/predict', upload.single('file'), mlProxyHandler);
+
+/* =========================
+   Seed admin on boot (Option A) — DO NOT CHANGE
+   ========================= */
 async function ensureAdmin() {
   try {
     const email = String(process.env.ADMIN_EMAIL || '').toLowerCase();
@@ -161,6 +169,7 @@ async function ensureAdmin() {
     }
   }
 }
+
 // Start server after DB connects
 connectMongo()
   .then(async () => {

@@ -1,4 +1,3 @@
-# backend/app.py
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -14,21 +13,18 @@ ALLOWED_EXT = {"png", "jpg", "jpeg"}
 IMAGE_SIZE = int(os.environ.get("IMAGE_SIZE", "150"))
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  # 8 MB
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  
 
-# CORS via env var: ALLOW_ORIGINS="https://your-frontend.vercel.app,https://your-node.onrender.com"
-allow = os.environ.get("ALLOW_ORIGINS", "*")  # comma-separated or "*"
+allow = os.environ.get("ALLOW_ORIGINS", "*") 
 if allow == "*":
     CORS(app, resources={r"/*": {"origins": "*"}})
 else:
     origins = [o.strip() for o in allow.split(",") if o.strip()]
     CORS(app, resources={r"/*": {"origins": origins}})
 
-# Model file is in the backend folder (same directory as this file)
 MODEL_PATH = os.path.join(BASE_DIR, "advanced_rice_leaf_disease_model.h5")
 CLASS_NAMES = ["Bacterial Blight", "Blast", "Brown Spot", "Tungro"]
 
-# Load model once at startup
 model = tf.keras.models.load_model(MODEL_PATH)
 
 def allowed_file(filename: str) -> bool:
@@ -38,7 +34,7 @@ def predict_image(path: str):
     img = tf.keras.utils.load_img(path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
     arr = tf.keras.utils.img_to_array(img) / 255.0
     arr = np.expand_dims(arr, axis=0)
-    probs = model.predict(arr, verbose=0)[0]  # softmax probs
+    probs = model.predict(arr, verbose=0)[0] 
     idx = int(np.argmax(probs))
     return {
         "result": CLASS_NAMES[idx] if idx < len(CLASS_NAMES) else f"class_{idx}",
@@ -58,7 +54,6 @@ def health():
 @app.route("/predict", methods=["POST", "OPTIONS"])
 def predict():
     if request.method == "OPTIONS":
-        # allow CORS preflight
         return ("", 204)
 
     if "file" not in request.files:
@@ -95,6 +90,6 @@ def serve_upload(fname):
     return send_from_directory(UPLOADS, fname)
 
 if __name__ == "__main__":
-    # Local development run
+
     port = int(os.environ.get("PORT", "5001"))
     app.run(host="0.0.0.0", port=port, debug=True)
