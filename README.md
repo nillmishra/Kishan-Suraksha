@@ -14,7 +14,7 @@ If you are developing a production application, we recommend using TypeScript wi
 
 # python setup
 .py -3.11 -m venv .venv311
-..venv311\Scripts\activate
+.venv\Scripts\activate
 pip install -r requirements.txt
 python .\app.py
 
