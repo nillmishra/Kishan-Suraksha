@@ -8,7 +8,7 @@ import { toImg } from "../utils/toImg";
 export default function ProductDetails() {
   const { id } = useParams(); // product id (_id)
   const API = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -106,13 +106,20 @@ export default function ProductDetails() {
       alert("Out of stock");
       return;
     }
-    const safeQty = Math.max(1, Math.min(qty, product.stock));
+    const currentInCart = (items.find((it) => String(it.id) === String(product.id))?.qty) || 0;
+    const remaining = Math.max(0, Number(product.stock) - currentInCart);
+    if (remaining <= 0) {
+      alert("You've already added the available stock.");
+      return;
+    }
+    const safeQty = Math.max(1, Math.min(qty, remaining));
     addItem(
       {
         id: product.id,
         name: product.name,
         price: product.price,
         image: product.image,
+        stock: product.stock, // pass stock to cart
       },
       safeQty
     );
@@ -221,13 +228,17 @@ export default function ProductDetails() {
             </div>
 
             <div className="mt-3">
-              {product.stock > 0 ? (
-                <span className="inline-block text-sm px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-300">
-                  In stock — {product.stock} available
-                </span>
-              ) : (
+              {product.stock <= 0 ? (
                 <span className="inline-block text-sm px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-300">
                   Out of stock
+                </span>
+              ) : product.stock <= 2 ? (
+                <span className="inline-block text-sm px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-300">
+                  Only {product.stock} left
+                </span>
+              ) : (
+                <span className="inline-block text-sm px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-300">
+                  In stock — {product.stock} available
                 </span>
               )}
             </div>

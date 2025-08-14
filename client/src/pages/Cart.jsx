@@ -8,7 +8,6 @@ function currency(n) {
   return `₹${n.toFixed(2)}`;
 }
 
-// Promo definitions
 const PROMOS = {
   SAVE10: { code: 'SAVE10', type: 'percent', value: 10, cap: 150, minSubtotal: 299, freeShip: false },
   SAVE50: { code: 'SAVE50', type: 'flat', value: 50, minSubtotal: 499, freeShip: false },
@@ -49,7 +48,7 @@ export default function Cart() {
       return;
     }
     if (subtotal < def.minSubtotal) {
-      setAppliedPromo(def); // keep it, but it won’t apply until threshold is met
+      setAppliedPromo(def); 
       setPromoMsg(`Add items worth ${currency(def.minSubtotal - subtotal)} more to use ${code}.`);
       localStorage.setItem('promo', JSON.stringify(def));
       return;
@@ -149,56 +148,62 @@ export default function Cart() {
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Items */}
           <div className="lg:col-span-2 space-y-4">
-            {items.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 card p-4">
-                <div className="img-wrap w-24 h-24">
-                  <img
-                    src={toImg(item.image)}
-                    alt={item.name}
-                    className="max-w-full max-h-full object-contain p-1"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    loading="lazy"
-                  />
-                </div>
+            {items.map((item) => {
+              const atMax = Number.isFinite(Number(item.stock)) && item.qty >= Number(item.stock);
+              return (
+                <div key={item.id} className="flex items-center gap-4 card p-4">
+                  <div className="img-wrap w-24 h-24">
+                    <img
+                      src={toImg(item.image)}
+                      alt={item.name}
+                      className="max-w-full max-h-full object-contain p-1"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      loading="lazy"
+                    />
+                  </div>
 
-                <div className="flex-1 text-left">
-                  <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{currency(item.price)}</p>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{currency(item.price)}</p>
 
-                  <div className="mt-3 flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => decreaseQty(item.id)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full border hover:bg-gray-50"
-                      aria-label="Decrease quantity"
-                    >
-                      −
-                    </button>
-                    <span className="min-w-[2ch] text-center">{item.qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => increaseQty(item.id)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full border hover:bg-gray-50"
-                      aria-label="Increase quantity"
-                    >
-                      +
-                    </button>
+                    <div className="mt-3 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => decreaseQty(item.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-full border hover:bg-gray-50"
+                        aria-label="Decrease quantity"
+                      >
+                        −
+                      </button>
+                      <span className="min-w-[2ch] text-center">{item.qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => increaseQty(item.id)}
+                        disabled={atMax}
+                        title={atMax ? `Max ${item.stock} in stock` : 'Increase quantity'}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full border hover:bg-gray-50 ${atMax ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        aria-label="Increase quantity"
+                        aria-disabled={atMax}
+                      >
+                        +
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.id)}
-                      className="ml-4 text-red-600 hover:underline"
-                    >
-                      Remove
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id)}
+                        className="ml-4 text-red-600 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900">{currency(item.price * item.qty)}</p>
                   </div>
                 </div>
-
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">{currency(item.price * item.qty)}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="text-right">
               <button type="button" onClick={clearCart} className="text-red-600 hover:underline">
@@ -207,7 +212,6 @@ export default function Cart() {
             </div>
           </div>
 
-          {/* Summary */}
           <aside className="card p-6 h-fit">
             <h2 className="text-xl font-semibold">Order Summary</h2>
 

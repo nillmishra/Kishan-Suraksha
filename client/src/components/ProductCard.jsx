@@ -29,7 +29,8 @@ export default function ProductCard({
       navigate('/login', { replace: true, state: { from: '/upload' } });
       return;
     }
-    addItem({ id, name, price, image }, 1);
+    // Pass stock so the cart clamps quantity correctly
+    addItem({ id, name, price, image, stock }, 1);
   };
 
   const onOpen = () => navigate(`/product/${id}`);
