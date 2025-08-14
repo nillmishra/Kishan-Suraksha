@@ -85,6 +85,9 @@ export default function MyOrders() {
         <div className="mt-8 space-y-6">
           {orders.map((o) => {
             const statusClass = STATUS_STYLE[o.status] || 'bg-gray-100 text-gray-700 border-gray-300';
+            const isDelivered = o.status === 'DELIVERED';
+            const isCancelled = o.status === 'CANCELLED';
+
             return (
               <div key={o._id || o.orderId} className="card p-6 md:p-8">
                 {/* Order header */}
@@ -111,9 +114,26 @@ export default function MyOrders() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={() => navigate(`/order/${o.orderId}/track`)}>
-                      Track Order
-                    </Button>
+                    {isDelivered ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full border text-sm font-semibold bg-green-100 text-green-700 border-green-300">
+                        Delivered
+                      </span>
+                    ) : isCancelled ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full border text-sm font-semibold bg-red-100 text-red-700 border-red-300">
+                        Cancelled
+                      </span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          navigate(`/order/${o.orderId}/track`, {
+                            state: { from: location.pathname }, // ensures Back returns here
+                          })
+                        }
+                      >
+                        Track Order
+                      </Button>
+                    )}
                   </div>
                 </div>
 

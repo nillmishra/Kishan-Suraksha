@@ -3,17 +3,26 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { toImg } from '../utils/toImg';
 import Button from '../components/ui/Button';
 
-export default function OrderTrack() {
-  const { orderId } = useParams();
+export default function OrderTrack(props) {
+  const { orderId: orderIdParam } = useParams();
+  const orderId = props?.orderId || orderIdParam;
+  const embedded = !!props?.embedded;
+  const initialData = props?.initialData || null;
+  const onBack = props?.onBack;
+
   const API = import.meta.env.VITE_API_URL || '';
-  const token = localStorage.getItem('token');
-  const [data, setData] = useState(null);
+  const token = localStorage.getItem('token') || '';
+  const [data, setData] = useState(() => initialData);
   const [err, setErr] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     let alive = true;
+    if (!orderId) {
+      setData(null);
+      return;
+    }
 
     const load = async () => {
       try {
@@ -44,13 +53,138 @@ export default function OrderTrack() {
   }, [API, orderId, token, navigate, location.pathname]);
 
   const currency = (n) => `₹${Number(n || 0).toFixed(2)}`;
-
   const totalAmount =
     data?.pricing?.total ??
     (data?.items || []).reduce(
       (sum, it) => sum + Number(it.price || 0) * Number(it.qty || 0),
       0
     );
+
+  const goBack = () => {
+    const from = location.state?.from;
+    const canGoBack =
+      typeof window !== 'undefined' &&
+      ((window.history?.state && window.history.state.idx > 0) || window.history.length > 1);
+
+    if (from) {
+      navigate(from, { replace: true });
+    } else if (canGoBack) {
+      navigate(-1);
+    } else {
+      navigate('/my-orders', { replace: true }); // fallback route
+    }
+  };
+
+  const handleBackClick = () => {
+    if (embedded) {
+      if (onBack) onBack();
+    } else {
+      goBack();
+    }
+  };
+
+  const Card = (
+    <>
+      {/* Error */}
+      {err && <p className="text-center mt-6 text-sm text-red-600">{err}</p>}
+
+      {/* Loading / Content */}
+      {!data && !err ? (
+        <p className="mt-10 text-center text-gray-600">Loading tracking info…</p>
+      ) : data ? (
+        <div className={`${embedded ? 'mt-6' : 'mt-10'} card p-6 md:p-8`}>
+          {/* Summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+            <div className="card-muted p-4">
+              <div className="text-gray-500">Status</div>
+              <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-semibold">
+                {data.status}
+              </div>
+            </div>
+            <div className="card-muted p-4">
+              <div className="text-gray-500">Placed</div>
+              <div className="mt-1 font-semibold">
+                {data.createdAt ? new Date(data.createdAt).toLocaleString() : '-'}
+              </div>
+            </div>
+            <div className="card-muted p-4">
+              <div className="text-gray-500">ETA</div>
+              <div className="mt-1 font-semibold">
+                {data.eta ? new Date(data.eta).toDateString() : '-'}
+              </div>
+            </div>
+            <div className="card-muted p-4">
+              <div className="text-gray-500">Total</div>
+              <div className="mt-1 font-semibold">{currency(totalAmount)}</div>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="mt-8">
+            <h3 className="font-semibold mb-3">Timeline</h3>
+            <ul className="space-y-2 text-sm">
+              {(data.timeline && data.timeline.length
+                ? data.timeline
+                : [{ label: 'Order placed', at: data.createdAt }]).map((t, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-600 inline-block" />
+                  <span className="text-gray-800">{t.label}</span>
+                  <span className="text-gray-500">— {t.at ? new Date(t.at).toLocaleString() : ''}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Items */}
+          {(data.items || []).length > 0 && (
+            <div className="mt-8">
+              <h3 className="font-semibold mb-3">Items</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(data.items || []).map((it, idx) => {
+                  const src = toImg(it.image);
+                  const key = `${it.productId || it.name || 'item'}-${idx}`;
+                  return (
+                    <div key={key} className="flex items-center gap-3 card-muted p-2">
+                      <div className="img-wrap w-16 h-16 md:w-20 md:h-20">
+                        {src ? (
+                          <img
+                            src={src}
+                            alt={it.name}
+                            className="max-w-full max-h-full object-contain p-1"
+                            loading="lazy"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full" />
+                        )}
+                      </div>
+                      <div className="text-sm">
+                        <div className="font-semibold line-clamp-2">{it.name}</div>
+                        <div className="text-gray-600">Qty: {it.qty}</div>
+                        <div className="text-gray-600">Price: {currency(it.price)}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {/* Actions */}
+      <div className="mt-8 flex gap-3 justify-center">
+        <Button onClick={handleBackClick}>Back</Button>
+        <Link to="/products" className="px-6 py-2.5 rounded-full text-green-700 hover:bg-green-50">
+          Continue Shopping
+        </Link>
+      </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div>{Card}</div>;
+  }
 
   return (
     <section className="bg-gradient-to-b from-green-50 via-white to-white">
@@ -66,100 +200,7 @@ export default function OrderTrack() {
           </p>
         </div>
 
-        {/* Error */}
-        {err && <p className="text-center mt-6 text-sm text-red-600">{err}</p>}
-
-        {/* Loading / Content */}
-        {!data && !err ? (
-          <p className="mt-10 text-center text-gray-600">Loading tracking info…</p>
-        ) : data ? (
-          <div className="mt-10 card p-6 md:p-8">
-            {/* Summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
-              <div className="card-muted p-4">
-                <div className="text-gray-500">Status</div>
-                <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-semibold">
-                  {data.status}
-                </div>
-              </div>
-              <div className="card-muted p-4">
-                <div className="text-gray-500">Placed</div>
-                <div className="mt-1 font-semibold">
-                  {data.createdAt ? new Date(data.createdAt).toLocaleString() : '-'}
-                </div>
-              </div>
-              <div className="card-muted p-4">
-                <div className="text-gray-500">ETA</div>
-                <div className="mt-1 font-semibold">
-                  {data.eta ? new Date(data.eta).toDateString() : '-'}
-                </div>
-              </div>
-              <div className="card-muted p-4">
-                <div className="text-gray-500">Total</div>
-                <div className="mt-1 font-semibold">{currency(totalAmount)}</div>
-              </div>
-            </div>
-
-            {/* Timeline */}
-            <div className="mt-8">
-              <h3 className="font-semibold mb-3">Timeline</h3>
-              <ul className="space-y-2 text-sm">
-                {(data.timeline && data.timeline.length ? data.timeline : [{ label: 'Order placed', at: data.createdAt }]).map((t, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-600 inline-block" />
-                    <span className="text-gray-800">{t.label}</span>
-                    <span className="text-gray-500">— {t.at ? new Date(t.at).toLocaleString() : ''}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Items */}
-            {(data.items || []).length > 0 && (
-              <div className="mt-8">
-                <h3 className="font-semibold mb-3">Items</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(data.items || []).map((it, idx) => {
-                    const src = toImg(it.image);
-                    const key = `${it.productId || it.name || 'item'}-${idx}`;
-                    return (
-                      <div key={key} className="flex items-center gap-3 card-muted p-2">
-                        <div className="img-wrap w-16 h-16 md:w-20 md:h-20">
-                          {src ? (
-                            <img
-                              src={src}
-                              alt={it.name}
-                              className="max-w-full max-h-full object-contain p-1"
-                              loading="lazy"
-                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                            />
-                          ) : (
-                            <div className="w-full h-full" />
-                          )}
-                        </div>
-                        <div className="text-sm">
-                          <div className="font-semibold line-clamp-2">{it.name}</div>
-                          <div className="text-gray-600">Qty: {it.qty}</div>
-                          <div className="text-gray-600">Price: {currency(it.price)}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : null}
-
-        {/* Actions */}
-        <div className="mt-8 flex gap-3 justify-center">
-          <Button to="/my-orders">
-            Back to My Orders
-          </Button>
-          <Link to="/products" className="px-6 py-2.5 rounded-full text-green-700 hover:bg-green-50">
-            Continue Shopping
-          </Link>
-        </div>
+        {Card}
       </div>
     </section>
   );

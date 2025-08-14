@@ -1,21 +1,21 @@
 // src/pages/Orders.jsx
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '../components/ui/Button';
-import { toImg } from '../utils/toImg';
+import OrderTrack from './OrderTrack'; // <-- add this
 
 export default function Orders() {
   const API = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [orderId, setOrderId] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [order, setOrder] = useState(null);
 
-  const fetchOrder = async (e) => {
-    e?.preventDefault?.();
-    if (!orderId.trim()) {
+  const loadOrderById = async (id) => {
+    if (!id?.trim()) {
       setErr('Please enter your Order ID.');
       return;
     }
@@ -26,7 +26,7 @@ export default function Orders() {
       const headers = {};
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch(`${API}/orders/${encodeURIComponent(orderId.trim())}`, { headers });
+      const res = await fetch(`${API}/orders/${encodeURIComponent(id.trim())}`, { headers });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data?.error || 'Failed to fetch order');
@@ -39,7 +39,29 @@ export default function Orders() {
     }
   };
 
-  const currency = (n) => `₹${Number(n || 0).toFixed(2)}`;
+  const fetchOrder = async (e) => {
+    e?.preventDefault?.();
+    await loadOrderById(orderId);
+  };
+
+  // Hydrate when we come back from standalone Track page (optional, safe to keep)
+  useEffect(() => {
+    const st = location.state;
+    if (!st) return;
+
+    const { order: orderFromTrack, orderId: idFromTrack } = st;
+
+    if (orderFromTrack) {
+      setOrder(orderFromTrack);
+      setOrderId(orderFromTrack.orderId || idFromTrack || '');
+    } else if (idFromTrack) {
+      setOrderId(idFromTrack);
+      loadOrderById(idFromTrack);
+    }
+
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   return (
     <section className="bg-gradient-to-b from-green-50 via-white to-white">
@@ -53,7 +75,7 @@ export default function Orders() {
           <p className="text-gray-700 mt-2">Enter your Order ID to view its items and status.</p>
         </div>
 
-        {/* Search form card (ring + shadow) */}
+        {/* Search form card */}
         <div className="mt-8 max-w-3xl mx-auto bg-white rounded-2xl ring-1 ring-gray-200 shadow-sm p-6">
           <form onSubmit={fetchOrder} className="flex flex-col sm:flex-row gap-3">
             <input
@@ -71,81 +93,15 @@ export default function Orders() {
           {err && <p className="mt-4 text-sm text-red-600">{err}</p>}
         </div>
 
-        {/* Order result card (ring + shadow) */}
+        {/* Embedded OrderTrack replaces the old result card */}
         {order && (
-          <div className="mt-8">
-            <div className="bg-white rounded-2xl ring-1 ring-gray-200 shadow-sm p-6 md:p-8">
-              {/* Summary grid with muted rings */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-700">
-                <div className="bg-gray-50 rounded-xl ring-1 ring-inset ring-gray-200 p-4">
-                  <div className="text-gray-500">Order ID</div>
-                  <div className="mt-1 font-mono font-semibold">{order.orderId}</div>
-                </div>
-                <div className="bg-gray-50 rounded-xl ring-1 ring-inset ring-gray-200 p-4">
-                  <div className="text-gray-500">Status</div>
-                  <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-semibold">
-                    {order.status}
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-xl ring-1 ring-inset ring-gray-200 p-4">
-                  <div className="text-gray-500">Placed</div>
-                  <div className="mt-1 font-semibold">
-                    {order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-xl ring-1 ring-inset ring-gray-200 p-4">
-                  <div className="text-gray-500">Total</div>
-                  <div className="mt-1 font-semibold">{currency(order.pricing?.total)}</div>
-                </div>
-              </div>
-
-              {/* CTA */}
-              <div className="mt-5">
-                <Button variant="outline" onClick={() => navigate(`/order/${order.orderId}/track`)}>
-                  View Timeline
-                </Button>
-              </div>
-
-              {/* Items with non-cropping thumbnails + light rings */}
-              <h3 className="mt-6 font-semibold">Items</h3>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {(order.items || []).map((it, idx) => {
-                  const src = toImg(it.image);
-                  const key = `${it.productId || it.name || 'item'}-${idx}`;
-                  return (
-                    <div key={key} className="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
-                      {/* Image wrapper */}
-                      <div className="w-full h-40 md:h-48 bg-gray-50 ring-1 ring-gray-200 flex items-center justify-center overflow-hidden">
-                        {src ? (
-                          <img
-                            src={src}
-                            alt={it.name}
-                            className="max-w-full max-h-full object-contain p-2"
-                            loading="lazy"
-                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                          />
-                        ) : (
-                          <div className="w-full h-full" />
-                        )}
-                      </div>
-                      {/* Content */}
-                      <div className="p-3">
-                        <div className="font-semibold line-clamp-2">{it.name}</div>
-                        <div className="text-sm text-gray-600 mt-1">Qty: {it.qty}</div>
-                        <div className="text-sm text-gray-600">Price: {currency(it.price)}</div>
-                        <div className="mt-2 font-semibold">
-                          Line total: {currency(Number(it.price) * Number(it.qty))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-6">
-                <Button variant="ghost" onClick={() => setOrder(null)}>Search another order</Button>
-              </div>
-            </div>
+          <div className="mt-8 max-w-3xl mx-auto">
+            <OrderTrack
+              orderId={order.orderId}
+              initialData={order}
+              embedded
+              onBack={() => setOrder(null)} // clears the result and shows the search again
+            />
           </div>
         )}
       </div>
