@@ -125,11 +125,7 @@ export default function MyOrders() {
                     ) : (
                       <Button
                         variant="outline"
-                        onClick={() =>
-                          navigate(`/order/${o.orderId}/track`, {
-                            state: { from: location.pathname }, // ensures Back returns here
-                          })
-                        }
+                        onClick={() => navigate(`/order/${o.orderId}/track`)}
                       >
                         Track Order
                       </Button>

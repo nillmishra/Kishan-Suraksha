@@ -14,6 +14,19 @@ const loadScript = (src) =>
     document.body.appendChild(s);
   });
 
+// Utility to ensure the page can scroll
+const unlockScroll = () => {
+  try {
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open', 'overflow-hidden', 'no-scroll', 'rzp-shown');
+    const rp = document.querySelector('.razorpay-container');
+    if (rp) rp.remove();
+  } catch (e) {
+    console.error('Failed to unlock scroll:', e);
+  }
+};
+
 export default function Checkout() {
   const { items, subtotal, clearCart } = useCart();
   const navigate = useNavigate();
@@ -111,6 +124,28 @@ export default function Checkout() {
   );
 
   const currency = (n) => `₹${n.toFixed(2)}`;
+
+  // While success modal is open, lock background scroll; auto-unlock on cleanup
+  useEffect(() => {
+    if (!orderSuccess) return;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, [orderSuccess]);
+
+  // Close modal then navigate (prevents overlay from lingering)
+  const safeNavigate = (to, opts) => {
+    setOrderSuccess(false);
+    setTimeout(() => {
+      unlockScroll();
+      navigate(to, opts);
+    }, 0);
+  };
 
   const placeOrder = async () => {
     const tokenCheck = localStorage.getItem('token');
@@ -258,14 +293,22 @@ export default function Checkout() {
             clearCart();
           } catch (err) {
             alert(err.message || 'Order creation failed after payment');
+          } finally {
+            // Make sure scroll is not locked by Razorpay
+            unlockScroll();
           }
         },
-        modal: { ondismiss: function () {} },
+        modal: {
+          ondismiss: function () {
+            unlockScroll();
+          },
+        },
       });
 
       rzp.open();
     } catch (e) {
       alert(e.message || 'Payment failed. Try again.');
+      unlockScroll();
     }
   };
 
@@ -478,16 +521,19 @@ export default function Checkout() {
         <OrderSuccessModal
           order={placedOrder}
           onClose={() =>
-            navigate(`/order/${placedOrder.orderId}`, { replace: true, state: { order: placedOrder } })
+            safeNavigate(`/order/${placedOrder.orderId}`, {
+              replace: true,
+              state: { order: placedOrder },
+            })
           }
-          onTrack={() => navigate(`/order/${placedOrder.orderId}/track`, { replace: true })}
+          onBack={() => safeNavigate('/products', { replace: true })}
         />
       )}
     </section>
   );
 }
 
-function OrderSuccessModal({ order, onClose, onTrack }) {
+function OrderSuccessModal({ order, onClose, onBack }) {
   const currency = (n) => `₹${Number(n || 0).toFixed(2)}`;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -521,7 +567,7 @@ function OrderSuccessModal({ order, onClose, onTrack }) {
         </div>
 
         <div className="mt-6 flex items-center justify-center gap-3">
-          <Button onClick={onTrack}>Track Order</Button>
+          <Button onClick={onBack}>Back to Products</Button>
           <Button variant="outline" onClick={onClose}>View Details</Button>
         </div>
       </div>

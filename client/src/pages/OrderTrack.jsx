@@ -3,12 +3,24 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { toImg } from '../utils/toImg';
 import Button from '../components/ui/Button';
 
+// Ensure page can scroll (clears leftovers from modals/third-party overlays)
+const unlockScroll = () => {
+  try {
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open', 'overflow-hidden', 'no-scroll', 'rzp-shown');
+    const rp = document.querySelector('.razorpay-container');
+    if (rp) rp.remove();
+  } catch (e) {
+    console.error('Failed to unlock scroll:', e);
+  }
+};
+
 export default function OrderTrack(props) {
   const { orderId: orderIdParam } = useParams();
   const orderId = props?.orderId || orderIdParam;
   const embedded = !!props?.embedded;
   const initialData = props?.initialData || null;
-  const onBack = props?.onBack;
 
   const API = import.meta.env.VITE_API_URL || '';
   const token = localStorage.getItem('token') || '';
@@ -16,6 +28,12 @@ export default function OrderTrack(props) {
   const [err, setErr] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Safety: unlock scroll when this page mounts and when it unmounts
+  useEffect(() => {
+    unlockScroll();
+    return () => unlockScroll();
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -59,29 +77,6 @@ export default function OrderTrack(props) {
       (sum, it) => sum + Number(it.price || 0) * Number(it.qty || 0),
       0
     );
-
-  const goBack = () => {
-    const from = location.state?.from;
-    const canGoBack =
-      typeof window !== 'undefined' &&
-      ((window.history?.state && window.history.state.idx > 0) || window.history.length > 1);
-
-    if (from) {
-      navigate(from, { replace: true });
-    } else if (canGoBack) {
-      navigate(-1);
-    } else {
-      navigate('/my-orders', { replace: true }); // fallback route
-    }
-  };
-
-  const handleBackClick = () => {
-    if (embedded) {
-      if (onBack) onBack();
-    } else {
-      goBack();
-    }
-  };
 
   const Card = (
     <>
@@ -174,7 +169,6 @@ export default function OrderTrack(props) {
 
       {/* Actions */}
       <div className="mt-8 flex gap-3 justify-center">
-        <Button onClick={handleBackClick}>Back</Button>
         <Link to="/products" className="px-6 py-2.5 rounded-full text-green-700 hover:bg-green-50">
           Continue Shopping
         </Link>
