@@ -124,7 +124,7 @@ export default function Cart() {
           <h1 className="text-4xl font-extrabold mt-3">Your Cart</h1>
           <p className="mt-3 text-gray-600">Your cart is empty. Add products to get started.</p>
           <div className="mt-6">
-            <Link to="/#products" className="px-6 py-2.5 rounded-full bg-green-600 text-white hover:bg-green-700">
+            <Link to="/products" className="px-6 py-2.5 rounded-full bg-green-600 text-white hover:bg-green-700">
               Browse Products
             </Link>
           </div>
