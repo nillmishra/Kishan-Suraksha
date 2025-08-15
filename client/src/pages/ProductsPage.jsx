@@ -108,7 +108,7 @@ export default function ProductsPage() {
                 key={c.label}
                 type="button"
                 onClick={() => setCategory(c.label)}
-                className={`px-3 py-1.5 rounded-full text-sm border transition whitespace-nowrap
+                className={`px-3 py-1.5 rounded-full text-sm border transition cursor-pointer whitespace-nowrap
                   ${category === c.label
                     ? 'bg-green-600 text-white border-green-600'
                     : 'bg-white text-gray-800 border-gray-300 hover:border-green-600'

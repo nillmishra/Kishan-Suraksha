@@ -8,7 +8,6 @@ import payImg from '../assets/pay.png';
 export default function Footer() {
   const { pathname } = useLocation();
 
-  // Hide Footer on admin, login, signup pages
   if (pathname.startsWith('/admin') || pathname === '/login' || pathname === '/signup') return null;
 
   return (
@@ -37,7 +36,7 @@ export default function Footer() {
           <h4 className="text-sm font-semibold">About</h4>
           <ul className="mt-3 space-y-2">
             <li><Link to="/about" className="text-sm text-gray-800 hover:text-green-700">About Us</Link></li>
-            <li><a href="#" className="text-sm text-gray-800 hover:text-green-700">Delivery Information</a></li>
+            <li><a href="/orders" className="text-sm text-gray-800 hover:text-green-700">Delivery Information</a></li>
             <li><a href="#" className="text-sm text-gray-800 hover:text-green-700">Privacy Policy</a></li>
             <li><a href="#" className="text-sm text-gray-800 hover:text-green-700">Terms & Conditions</a></li>
             <li><Link to="/contact" className="text-sm text-gray-800 hover:text-green-700">Contact Us</Link></li>
@@ -56,7 +55,7 @@ export default function Footer() {
             <li>
               <Link to="/orders" className="text-sm text-gray-800 hover:text-green-700">Track My Order</Link>
             </li>
-            <li><a href="#" className="text-sm text-gray-800 hover:text-green-700">Help</a></li>
+            <li><a href="/contact" className="text-sm text-gray-800 hover:text-green-700">Help</a></li>
           </ul>
         </div>
 

@@ -21,9 +21,7 @@ export default function Features() {
 
       {/* Card container */}
       <div className="max-w-6xl w-full mx-auto mt-10 bg-white p-6 md:p-10 rounded-2xl shadow">
-        {/* 40/60 layout on md+ screens */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 items-center">
-          {/* Left: 40% image */}
           <div className="md:col-span-2">
             <div className="w-full rounded-xl bg-gray-50 border p-3 flex items-center justify-center">
               <img
@@ -35,7 +33,6 @@ export default function Features() {
             </div>
           </div>
 
-          {/* Right: 60% text */}
           <div className="md:col-span-3">
             <h3 className="text-2xl md:text-3xl font-semibold">
               CropGuard AI — Plant Leaf Disease Detection

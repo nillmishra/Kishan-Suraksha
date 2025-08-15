@@ -33,8 +33,8 @@ const Button = forwardRef(
     },
     ref
   ) => {
-    const base =
-      'inline-flex items-center justify-center rounded-full font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-600 disabled:opacity-60 disabled:cursor-not-allowed';
+   const base =
+  'inline-flex items-center justify-center rounded-full font-medium transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-600 disabled:opacity-60 disabled:cursor-not-allowed';
     const classes = clsx(base, sizes[size], variants[variant], className);
 
     if (to) {

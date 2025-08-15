@@ -9,7 +9,7 @@ router.get('/orders', requireAdmin, async (req, res) => {
     const status = req.query.status;
     const q = status ? { status } : {};
     const list = await Order.find(q)
-      .populate('user', 'name email')   // <- add this
+      .populate('user', 'name email')  
       .sort({ createdAt: -1 })
       .limit(200);
     return res.json({ orders: list });

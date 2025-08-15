@@ -79,7 +79,7 @@ export default function ProductCard({
         aria-label="Add to cart"
         aria-disabled={!inStock}
         disabled={!inStock}
-        className={`absolute bottom-3 right-3 w-10 h-10 rounded-full border flex items-center justify-center transition
+        className={`absolute bottom-3 right-3 w-10 h-10 cursor-pointer rounded-full border flex items-center justify-center transition
           ${inStock
             ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100'
             : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
