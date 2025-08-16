@@ -5,6 +5,9 @@ import { User } from './models/User.js';
 
 const router = Router();
 
+// Use one shared secret for both sign and verify
+const SECRET = process.env.JWT_SECRET || 'dev';
+
 function createToken(user, secret) {
   return jwt.sign(
     { id: user._id, email: user.email, name: user.name, isAdmin: !!user.isAdmin },
@@ -15,10 +18,14 @@ function createToken(user, secret) {
 
 export function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  const raw = header.startsWith('Bearer ') ? header.slice(7) : null;
+
+  // Clean token: handle quotes and "null"/"undefined"
+  const token = raw && raw !== 'null' && raw !== 'undefined' ? raw.replace(/^"(.+)"$/, '$1').trim() : '';
+
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET || 'dev');
+    req.user = jwt.verify(token, SECRET);
     next();
   } catch {
     return res.status(401).json({ error: 'Invalid token' });
@@ -59,7 +66,7 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, hash);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
 
-    const token = createToken(user, process.env.JWT_SECRET || 'dev');
+    const token = createToken(user, SECRET);
     return res.json({
       access_token: token,
       user: { id: user._id, name: user.name, email: user.email, isAdmin: !!user.isAdmin },

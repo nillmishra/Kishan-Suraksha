@@ -5,7 +5,13 @@ import Button from '../components/ui/Button';
 export default function AddressNew() {
   const navigate = useNavigate();
   const API = import.meta.env.VITE_API_URL || '';
-  const token = localStorage.getItem('token');
+
+  // Clean token: handle "null"/"undefined" and accidental surrounding quotes
+  const getToken = () => {
+    const t = localStorage.getItem('token');
+    return t && t !== 'null' && t !== 'undefined' ? t.replace(/^"(.+)"$/, '$1').trim() : '';
+  };
+  const token = getToken();
 
   useEffect(() => {
     if (!token) navigate('/login', { replace: true, state: { from: '/address/new' } });
@@ -36,39 +42,39 @@ export default function AddressNew() {
     return '';
   };
 
-const save = async (e) => {
-  e.preventDefault();
-  setStatus('');
-  const err = validate();
-  if (err) { setStatus(err); return; }
+  const save = async (e) => {
+    e.preventDefault();
+    setStatus('');
+    const err = validate();
+    if (err) { setStatus(err); return; }
 
-  const API = import.meta.env.VITE_API_URL || '';
-  const token = localStorage.getItem('token');
-  if (!token) {
-    navigate('/login', { replace: true, state: { from: '/address/new' } });
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API}/account/addresses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(addr),
-    });
-
-    const ct = res.headers.get('content-type') || '';
-    const payload = ct.includes('application/json') ? await res.json() : await res.text();
-
-    if (!res.ok) {
-      const msg = typeof payload === 'string' ? payload : payload?.error || `Failed to save address (HTTP ${res.status})`;
-      throw new Error(msg);
+    const API = import.meta.env.VITE_API_URL || '';
+    const token = getToken();
+    if (!token) {
+      navigate('/login', { replace: true, state: { from: '/address/new' } });
+      return;
     }
 
-    navigate('/checkout', { replace: true });
-  } catch (e) {
-    setStatus(e.message || 'Failed to save address');
-  }
-};
+    try {
+      const res = await fetch(`${API}/account/addresses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(addr),
+      });
+
+      const ct = res.headers.get('content-type') || '';
+      const payload = ct.includes('application/json') ? await res.json() : await res.text();
+
+      if (!res.ok) {
+        const msg = typeof payload === 'string' ? payload : payload?.error || `Failed to save address (HTTP ${res.status})`;
+        throw new Error(msg);
+      }
+
+      navigate('/checkout', { replace: true });
+    } catch (e) {
+      setStatus(e.message || 'Failed to save address');
+    }
+  };
 
   return (
     <section className="px-4 py-16 max-w-2xl mx-auto">
